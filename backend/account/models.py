@@ -41,7 +41,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin) :
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    roles = models.CharField(max_length=50, choices=ROLES_CHOICES, default='user')
+    role = models.CharField(max_length=50, choices=ROLES_CHOICES, default='user')
 
     objects = CustomUserManager()
 
