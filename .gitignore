@@ -1,0 +1,31 @@
+# Python bytecode
+**/__pycache__/
+**/*.py[cod]
+*$py.class
+
+# Keep all migration .py files, but ignore pycache inside them
+!**/migrations/
+!**/migrations/*.py
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment variables
+backend/.env
+frontend/.env
+
+# Database files (if using SQLite locally)
+*.sqlite3
+
+# Static & media (optional)
+staticfiles/
+media/
+
+# Frontend build artifacts (if using React/Next.js etc.)
+frontend/node_modules/
+frontend/build/
+frontend/.next/
+frontend/dist/
