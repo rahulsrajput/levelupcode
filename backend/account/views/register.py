@@ -1,11 +1,12 @@
 from rest_framework.views import APIView
-import uuid
-from account.serializers.auth import RegisterSerializer
+from account.serializers.register import RegisterSerializer
 from account.models import EmailVerificationToken
 from rest_framework.response import Response
 from rest_framework import status
 from account.utils.email import sendgrid_template_mail
 from account.constants import VERIFY_EMAIL_TEMPLATE_ID
+
+
 
 class registerView(APIView):
     def post(self, request):
