@@ -42,6 +42,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'account',
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -94,6 +95,15 @@ DATABASES = {
         'PORT' : config('DB_PORT')
     }
 }
+
+
+# Email Service
+EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+ANYMAIL = {
+    'SENDGRID_API_KEY': config('SENDGRID_API_KEY')
+}
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
