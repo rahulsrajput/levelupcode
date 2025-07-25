@@ -2,7 +2,7 @@ from rest_framework import serializers
 from account.models import CustomUser
 import uuid
 from account.models import CustomUser
-from django.contrib.auth import authenticate
+
 
 class RegisterSerializer(serializers.ModelSerializer) :
     password = serializers.CharField(write_only=True, min_length=8)
