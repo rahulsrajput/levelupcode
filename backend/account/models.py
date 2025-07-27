@@ -62,3 +62,17 @@ class EmailVerificationToken(models.Model) :
 
     def is_expired (self):
         return timezone.now() > self.created_at + timedelta(minutes=5)
+    
+    
+    
+    
+class UserSession(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    refresh_token = models.TextField()
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.email} @ {self.ip_address} [{self.created_at}]"
+    
