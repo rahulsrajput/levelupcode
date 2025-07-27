@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'account',
     'anymail',
 ]
@@ -103,6 +104,24 @@ ANYMAIL = {
     'SENDGRID_API_KEY': config('SENDGRID_API_KEY')
 }
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+
+
+# JWT
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), # short lived access-token
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # long lived refresh-token
+    'ROTATE_REFRESH_TOKENS': True, # 🔁 rotates on every refresh
+    'BLACKLIST_AFTER_REFRESH': True, # invalidate old refresh
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
 
 
 # Password validation
