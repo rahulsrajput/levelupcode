@@ -1,7 +1,7 @@
 from account.models import UserSession
 
 
-def log_user_session(user, refresh_token, request):
+def log_user_session(user, refresh_token, jti, request, revoked=False):
     ip = request.META.get('REMOTE_ADDR')
     ua = request.META.get('HTTP_USER_AGENT')
     
@@ -9,5 +9,7 @@ def log_user_session(user, refresh_token, request):
         user= user,
         refresh_token=refresh_token,
         ip_address= ip,
-        user_agent=ua
+        user_agent=ua,
+        jti=jti,
+        revoked=revoked
     )
