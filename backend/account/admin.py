@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, EmailVerificationToken, UserSession
+from .models import CustomUser, PasswordResetToken, UserSession
 
 # Register your models here.
 class CustomUserAdmin(UserAdmin) : 
@@ -23,7 +23,7 @@ class CustomUserAdmin(UserAdmin) :
     )
 
 
-class EmailVerificationTokenAdmin(admin.ModelAdmin) :
+class PasswordResetTokenAdmin(admin.ModelAdmin) :
     list_display = ('user', 'token', 'created_at', 'used')
     readonly_fields = ('token', 'created_at')
     search_fields = ('user__email', 'token')
@@ -36,5 +36,5 @@ class UserSessionAdmin(admin.ModelAdmin):
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(EmailVerificationToken, EmailVerificationTokenAdmin)
+admin.site.register(PasswordResetToken, PasswordResetTokenAdmin)
 admin.site.register(UserSession, UserSessionAdmin)

@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
 from account.utils.logUserSession import log_user_session
-
+from account.utils.jwt_helper import generate_access_token, generate_refresh_token
 
 class LoginUserSerialier(serializers.Serializer):
     email = serializers.EmailField()
@@ -28,16 +27,14 @@ class LoginUserSerialier(serializers.Serializer):
         
         
         # issue token
-        refresh = RefreshToken.for_user(user=user)
-        access = refresh.access_token
+        refresh, jti = generate_refresh_token(user=user)
+        access = generate_access_token(user=user)
         
         # log session
         request = self.context.get('request')
-        log_user_session(user=user, refresh_token=refresh, request=request)
+        log_user_session(user=user, refresh_token=refresh, jti=jti, request=request)
         
         attrs['refresh'] = str(refresh)
         attrs['access'] = str(access)
         attrs['user'] = user
         return attrs
-        
-        

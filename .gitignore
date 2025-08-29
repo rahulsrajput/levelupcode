@@ -2,6 +2,9 @@
 **/__pycache__/
 **/*.py[cod]
 *$py.class
+.vscode/
+.vscode/settings.json
+
 
 # Keep all migration .py files, but ignore pycache inside them
 !**/migrations/
