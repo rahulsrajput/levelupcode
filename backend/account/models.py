@@ -27,6 +27,7 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+
 class CustomUser(AbstractBaseUser, PermissionsMixin) : 
     email = models.EmailField(unique=True)
     username = models.CharField(blank=True, unique=True)
@@ -54,15 +55,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin) :
         return f"{self.first_name} {self.last_name}"
 
 
-class EmailVerificationToken(models.Model) : 
+
+class PasswordResetToken(models.Model) : 
     user = models.ForeignKey(settings.AUTH_USER_MODEL , on_delete=models.CASCADE)
     token = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
     used = models.BooleanField(default=False)
+    expired = models.BooleanField(default=False)
+
 
     def is_expired (self):
         return timezone.now() > self.created_at + timedelta(minutes=5)
-    
     
     
     
@@ -72,7 +75,10 @@ class UserSession(models.Model):
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    jti = models.CharField(max_length=255, unique=True) 
+    revoked = models.BooleanField(default=False)
+    replaced_by = models.CharField(max_length=255, blank=True, null=True)
     
     def __str__(self):
-        return f"{self.user.email} @ {self.ip_address} [{self.created_at}]"
+        return f"{self.user.email} - {self.jti} - revoked = {self.revoked}"
     

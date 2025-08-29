@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'account.middlewares.jwtAuthMiddleware.JWTAuthenticationMiddleware'
 ]
 
 ROOT_URLCONF = 'levelupcode.urls'
@@ -115,13 +116,19 @@ REST_FRAMEWORK = {
 
 
 from datetime import timedelta
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), # short lived access-token
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # long lived refresh-token
-    'ROTATE_REFRESH_TOKENS': True, # 🔁 rotates on every refresh
-    'BLACKLIST_AFTER_REFRESH': True, # invalidate old refresh
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), # short lived access-token
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # long lived refresh-token
+#     'ROTATE_REFRESH_TOKENS': True, # 🔁 rotates on every refresh
+#     'BLACKLIST_AFTER_REFRESH': True, # invalidate old refresh
+#     'AUTH_HEADER_TYPES': ('Bearer',),
+# }
+
+JWT_SECRET_KEY = config('JWT_SECRET_KEY')
+JWT_ALGORITHM = config('JWT_ALGORITHM', default='HS256')
+JWT_ACCESS_TOKEN_LIFETIME = timedelta(minutes=15)  # short lived access-token
+JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=7)  # long lived refresh-token
+
 
 
 # Password validation
