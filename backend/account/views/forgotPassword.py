@@ -42,4 +42,4 @@ class ForgotPassword(APIView):
             return Response({
                 'message': "User email does'nt exists",
                 'success': False
-            }, status=status.HTTP_401_UNAUTHORIZED)
+            }, status=status.HTTP_404_NOT_FOUND)
