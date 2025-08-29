@@ -6,6 +6,7 @@ from account.views.logout import logoutView
 from account.views.refresh import RefreshView
 from account.views.forgotPassword import ForgotPassword
 from account.views.resetPassword import ResetPassword
+from account.views.profile import ProfileView
 
 urlpatterns = [
     path('register/', registerView.as_view(), name='register'),
@@ -15,4 +16,5 @@ urlpatterns = [
     path('refresh/', RefreshView.as_view(), name='refresh'),
     path('forgot-password/', ForgotPassword.as_view(), name='forgot_password'),
     path('reset-password/', ResetPassword.as_view(), name='reset_password'),
+    path('profile/', ProfileView.as_view(), name='profile'),
 ]
