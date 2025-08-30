@@ -127,10 +127,13 @@ from datetime import timedelta
 
 JWT_SECRET_KEY = config('JWT_SECRET_KEY')
 JWT_ALGORITHM = config('JWT_ALGORITHM', default='HS256')
-JWT_ACCESS_TOKEN_LIFETIME = timedelta(minutes=15)  # short lived access-token
+JWT_ACCESS_TOKEN_LIFETIME = timedelta(minutes=5)  # short lived access-token
 JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=7)  # long lived refresh-token
 
-
+COOKIE_MAX_AGE = {
+    'access': 5 * 60,        # 5 minutes
+    'refresh': 7 * 24 * 60 * 60  # 7 days
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

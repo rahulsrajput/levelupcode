@@ -7,8 +7,11 @@ from account.constants import VERIFY_EMAIL_TEMPLATE_ID
 import jwt
 import datetime
 from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 
 
+@method_decorator(csrf_protect, name='dispatch')
 class registerView(APIView):
     def post(self, request):
         serialier = RegisterSerializer(data=request.data)

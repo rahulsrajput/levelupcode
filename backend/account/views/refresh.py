@@ -5,7 +5,12 @@ from rest_framework.response import Response
 from django.db import transaction
 from account.models import UserSession
 from account.utils.jwt_helper import generate_access_token, generate_refresh_token, decode_access_token
+from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 
+
+@method_decorator(csrf_protect, name='dispatch')
 class RefreshView(APIView):
     
     @transaction.atomic
@@ -97,14 +102,16 @@ class RefreshView(APIView):
                     value=new_access_token,
                     httponly=True,
                     secure=True,
-                    samesite='None'
+                    samesite='None',
+                    max_age=settings.COOKIE_MAX_AGE.get("access") # 5 min
                 )
                 response.set_cookie(
                     key='refresh',
                     value=new_refresh_token,
                     httponly=True,
                     secure=True,
-                    samesite='None'
+                    samesite='None',
+                    max_age=settings.COOKIE_MAX_AGE.get("refresh") # 7 days
                 )
 
             transaction.on_commit(set_cookie)
