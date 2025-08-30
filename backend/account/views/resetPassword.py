@@ -2,8 +2,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from account.serializers.resetPassword import ResetPasswordSerializer
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 
 
+@method_decorator(csrf_protect, name='dispatch')
 class ResetPassword(APIView):
 
     def post(self, request):

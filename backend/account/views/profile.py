@@ -4,7 +4,11 @@ from rest_framework.views import APIView
 from account.serializers.profile import ProfileSerializer
 from account.models import CustomUser
 from rest_framework import status
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 
+
+@method_decorator(csrf_protect, name='dispatch')
 class ProfileView(APIView):
 
     def get(self, request):

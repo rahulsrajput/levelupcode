@@ -4,8 +4,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from account.utils.jwt_helper import decode_access_token
 from account.models import UserSession
+from django.views.decorators.csrf import csrf_protect
+from django.utils.decorators import method_decorator
 
 
+@method_decorator(csrf_protect, name='dispatch')
 class logoutView(APIView):
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh') # got token in string format

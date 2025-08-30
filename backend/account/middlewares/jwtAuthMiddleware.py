@@ -20,6 +20,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             '/api/v1/auth/verify-email/',
             '/api/v1/auth/forgot-password/',
             '/api/v1/auth/reset-password/',
+            '/admin/'
         ]
         if any(request.path.startswith(path) for path in exempt_paths):
             return None

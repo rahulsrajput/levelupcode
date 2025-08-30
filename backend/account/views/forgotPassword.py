@@ -4,8 +4,11 @@ from rest_framework.views import APIView
 from account.models import CustomUser, PasswordResetToken
 from account.utils.email import sendgrid_template_mail
 from account import constants
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 
 
+@method_decorator(csrf_protect, name='dispatch')
 class ForgotPassword(APIView):
 
     def post(self, request):
