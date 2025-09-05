@@ -1,39 +1,44 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from account.models import CustomUser, PasswordResetToken
-from account.utils.email import sendgrid_template_mail
-from account import constants
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
+from account.models import PasswordResetToken
+from account.utils.email import send_mailtrap_mail
+from account.constants import RESET_PASSWORD_TEMPLATE_ID
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
-@method_decorator(csrf_protect, name='dispatch')
 class ForgotPassword(APIView):
 
     def post(self, request):
         # print(request.data)
         try:
-            user = CustomUser.objects.get(email=request.data.get("email"))
+            user = User.objects.get(email=request.data.get("email"))
             resetToken = PasswordResetToken.objects.create(user=user)
+            verification_link = f"http://frontend/verify-email/{resetToken.token}"
             # print(resetToken)
     
             try:
-                sendgrid_template_mail(
-                    to_email=user.email,
-                    template_id=constants.RESET_PASSWORD_TEMPLATE_ID,
-                    subject="Password reset link",
-                    dynamic_data={
-                        "user_name": user.email or "User",
-                        "verification_link": f"http://frontend/reset-password/{resetToken.token}"
-                    }
+                response = send_mailtrap_mail(
+                    to_email = user.email,
+                    user_name = user.email,
+                    link = verification_link,
+                    template_id = RESET_PASSWORD_TEMPLATE_ID,
                 )
+                
+                if response.status_code == 200:
+                    return Response({
+                        'message': "Reset password link sent via email",
+                        'success': True
+                    }, status=status.HTTP_200_OK)
+                else:
+                    return Response({
+                        'message': "Failed to send email",
+                        'mailtrap_error' : response.text,
+                        'success': False
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                return Response({
-                    'message': "Reset Password link is shared on email",
-                    'success': True
-                }, status=status.HTTP_200_OK)
-        
             except Exception as e:
                 return Response({
                     'message':f"Error occured while sending reset password link , {str(e)}",
@@ -41,7 +46,7 @@ class ForgotPassword(APIView):
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
 
-        except CustomUser.DoesNotExist:  
+        except User.DoesNotExist:  
             return Response({
                 'message': "User email does'nt exists",
                 'success': False
