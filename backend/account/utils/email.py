@@ -1,12 +1,39 @@
-from anymail.message import AnymailMessage
-from django.conf import settings
+import requests
+from decouple import config
 
-def sendgrid_template_mail(to_email, template_id, dynamic_data, subject, from_email=settings.DEFAULT_FROM_EMAIL):
-    message = AnymailMessage(
-        subject=subject,
-        to=(to_email,),
-        from_email=from_email,
-        template_id=template_id, # SendGrid template ID
+MAILTRAP_API_URL = "https://sandbox.api.mailtrap.io/api/send/4011941"
+
+
+def send_mailtrap_mail(to_email, user_name, link, template_id):
+    headers = {
+        'Authorization' : f"Bearer {config('MAILTRAP_API_KEY')}",
+        'Content-Type' : 'application/json'
+    }
+
+    payload = {
+        "from" : {
+            "email": config('DEFAULT_FROM_EMAIL'),
+            "name": "LevelUpCode"
+        },
+        
+        "to": [
+            {
+                "email": to_email,
+                "name": user_name
+            }
+        ],
+        "template_uuid": template_id,
+        "template_variables": {
+            "user_name": user_name,
+            "link": link
+        }
+    }
+
+    response = requests.post(
+        MAILTRAP_API_URL,
+        headers=headers,
+        json=payload
     )
-    message.merge_global_data = dynamic_data # This will replace template variables merge_global_data is dictionary attribute
-    message.send()
+
+    # return response object for debugging
+    return response

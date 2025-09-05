@@ -1,10 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, PasswordResetToken, UserSession
+from .models import PasswordResetToken, UserSession
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 # Register your models here.
-class CustomUserAdmin(UserAdmin) : 
-    model = CustomUser
+class UserAdmin(UserAdmin) : 
+    model = User
     list_display = ('email', 'username', 'is_active', 'is_staff', 'role', 'is_verified')
     list_filter = ('is_active', 'is_staff', 'role', 'is_verified')
     search_fields = ('email', 'username', 'first_name', 'last_name')
@@ -35,6 +38,6 @@ class UserSessionAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'ip_address', 'user_agent')
 
 
-admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(User, UserAdmin)
 admin.site.register(PasswordResetToken, PasswordResetTokenAdmin)
 admin.site.register(UserSession, UserSessionAdmin)

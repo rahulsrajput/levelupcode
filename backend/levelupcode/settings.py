@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,7 +43,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
-    'rest_framework_simplejwt.token_blacklist',
     'account',
     'anymail',
     'core',
@@ -55,7 +56,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'account.middlewares.jwtAuthMiddleware.JWTAuthenticationMiddleware'
 ]
 
 ROOT_URLCONF = 'levelupcode.urls'
@@ -100,41 +100,6 @@ DATABASES = {
 }
 
 
-# Email Service
-EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
-ANYMAIL = {
-    'SENDGRID_API_KEY': config('SENDGRID_API_KEY')
-}
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
-
-
-# JWT
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
-}
-
-
-from datetime import timedelta
-# SIMPLE_JWT = {
-#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), # short lived access-token
-#     'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # long lived refresh-token
-#     'ROTATE_REFRESH_TOKENS': True, # 🔁 rotates on every refresh
-#     'BLACKLIST_AFTER_REFRESH': True, # invalidate old refresh
-#     'AUTH_HEADER_TYPES': ('Bearer',),
-# }
-
-JWT_SECRET_KEY = config('JWT_SECRET_KEY')
-JWT_ALGORITHM = config('JWT_ALGORITHM', default='HS256')
-JWT_ACCESS_TOKEN_LIFETIME = timedelta(minutes=5)  # short lived access-token
-JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=7)  # long lived refresh-token
-
-COOKIE_MAX_AGE = {
-    'access': 5 * 60,        # 5 minutes
-    'refresh': 7 * 24 * 60 * 60  # 7 days
-}
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -175,3 +140,26 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# JWT Settings
+JWT_SECRET_KEY = config('JWT_SECRET_KEY')
+JWT_ALGORITHM = config('JWT_ALGORITHM', default='HS256')
+JWT_ACCESS_TOKEN_LIFETIME = timedelta(minutes=5)  # short lived access-token
+JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=7)  # long lived refresh-token
+
+
+# COOKIE Settings
+COOKIE_MAX_AGE = {
+    'access': 5 * 60,        # 5 minutes
+    'refresh': 7 * 24 * 60 * 60  # 7 days
+}
+
+
+# REST Framework Settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'account.authentication.cookieJWTAuthentication',  # Custom cookie-based JWT authentication
+        'rest_framework_simplejwt.authentication.JWTAuthentication', # Fallback to header-based JWT authentication
+    )
+}
