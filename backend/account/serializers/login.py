@@ -4,6 +4,7 @@ from account.utils.logUserSession import log_user_session
 from account.utils.jwt_helper import generate_access_token, generate_refresh_token
 
 class LoginUserSerialier(serializers.Serializer):
+    
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
     
@@ -12,12 +13,12 @@ class LoginUserSerialier(serializers.Serializer):
         password = attrs.get('password')
         
         if not email or not password:
-            raise serializers.ValidationError("Email and password both required")
+            raise serializers.ValidationError("email and password both required")
         
         user = authenticate(email=email, password=password)
         
         if not user:
-            raise serializers.ValidationError("Invalid credentials")
+            raise serializers.ValidationError("invalid credentials")
         
         if not user.is_active:
             raise serializers.ValidationError("account is not active")
