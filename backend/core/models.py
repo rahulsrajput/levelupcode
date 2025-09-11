@@ -121,5 +121,18 @@ class Problem(models.Model):
         related_name='problems'
     )
 
+    slug = models.SlugField(
+        max_length = 200,
+        unique = True,
+        db_index = True,
+        blank = True,
+        null = True
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.title
