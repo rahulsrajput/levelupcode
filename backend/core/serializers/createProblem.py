@@ -28,6 +28,10 @@ class CreateProblemSerializer(serializers.ModelSerializer):
 
         read_only_fields = ['id', 'createdAt', 'updatedAt', 'user']
 
+        extra_kwargs = {
+            'slug' : {'required': False},
+        }
+
     
     def create(self, validated_data):
 
