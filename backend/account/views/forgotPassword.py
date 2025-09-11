@@ -5,6 +5,7 @@ from account.models import PasswordResetToken
 from account.utils.email import send_mailtrap_mail
 from account.constants import RESET_PASSWORD_TEMPLATE_ID
 from django.contrib.auth import get_user_model
+from decouple import config
 
 User = get_user_model()
 
@@ -16,7 +17,7 @@ class ForgotPassword(APIView):
         try:
             user = User.objects.get(email=request.data.get("email"))
             resetToken = PasswordResetToken.objects.create(user=user)
-            verification_link = f"http://frontend/verify-email/{resetToken.token}"
+            verification_link = f"{config('FRONTEND_URL')}/verify-email/{resetToken.token}"
             # print(resetToken)
     
             try:
