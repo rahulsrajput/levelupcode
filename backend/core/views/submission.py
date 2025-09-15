@@ -8,6 +8,19 @@ from core.serializers.submission import SubmitProblemSerializer
 from core.utils.judge0 import submit_batch, poll_batch_results
 
 
+"""
+    1. Get problem from db
+    2. check if request data is valid through serializer
+    3. Get language id from db
+    4. Create submission and submissiontestcase rows for each testcase stored in problem object in JSON format
+    5. create batch of submissions to judge0
+    6. send batch to judge0
+    7. will get tokens from judge0
+    8. will update submissiontestcase objects
+    9. return submission id 
+"""
+
+
 class SubmitProblemView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -80,7 +93,12 @@ class SubmitProblemView(APIView):
             # 4. Send batch to Judge0
             try : 
                 tokens = submit_batch(batch) # returns ["tok1", "tok2", ...]
-
+                
+                """
+                    can use zip() to map tokens to testcases and update them
+                    The zip() function takes multiple iterables (like lists, tuples, etc.) and pairs up the elements from each iterable based on their position (index).
+                """
+                
                 for idx, testcase in enumerate(testcases):
                     testcase.token = tokens[idx]
 
