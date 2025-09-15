@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Problem, Tag, Language
+from .models import Problem, Tag, Language, Submission, SubmissionTestCase
 
 # Register your models here.
 class ProblemAdmin(admin.ModelAdmin):
@@ -12,3 +12,5 @@ class ProblemAdmin(admin.ModelAdmin):
 admin.site.register(Problem, ProblemAdmin)
 admin.site.register(Tag)
 admin.site.register(Language)
+admin.site.register(Submission)
+admin.site.register(SubmissionTestCase)
