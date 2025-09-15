@@ -136,3 +136,96 @@ class Problem(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+
+class Submission(models.Model):
+
+    class Status(models.TextChoices):
+        PENDING = 'Pending', 'Pending'
+        FAILED = 'Failed', 'Failed'
+        PASSED = 'Passed', 'Passed'
+
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='submissions'
+    )
+
+    problem = models.ForeignKey(
+        Problem,
+        on_delete=models.CASCADE,
+        related_name='submissions'
+    )
+
+    source_code = models.TextField() # user code
+
+    language = models.ForeignKey(
+        Language, 
+        on_delete=models.CASCADE,
+        related_name='submissions'
+    )
+
+    status = models.CharField(
+        choices = Status.choices,
+        default = Status.PENDING,
+        max_length = 10
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']  # Latest submissions first
+
+    def __str__(self):
+        return f"Submission #{self.id} by {self.user.email} for {self.problem.title}"
+
+
+
+class SubmissionTestCase(models.Model):
+
+    class Status(models.TextChoices):
+        IN_QUEUE = "In Queue", "In Queue"
+        PROCESSING = "Processing", "Processing"
+        ACCEPTED = "Accepted", "Accepted"
+        WRONG_ANSWER = "Wrong Answer", "Wrong Answer"
+        RUNTIME_ERROR = "Runtime Error", "Runtime Error"
+        COMPILATION_ERROR = "Compilation Error", "Compilation Error"
+        TIME_LIMIT_EXCEEDED = "Time Limit Exceeded", "Time Limit Exceeded"
+
+    submission = models.ForeignKey(
+        Submission,
+        on_delete=models.CASCADE,
+        related_name="testcases"
+    )
+
+    # Judge0 token for this testcase
+    token = models.CharField(max_length=100, unique=True,db_index=True,null=True, blank=True)
+
+    status = models.CharField(
+        choices=Status.choices,
+        default=Status.IN_QUEUE,
+        max_length=50,
+        db_index=True
+    )
+
+    # Problem’s testcase data
+    input_data = models.TextField()
+    expected_output = models.TextField()
+
+    # Judge0 results
+    actual_output = models.TextField(blank=True, null=True)
+    stderr = models.TextField(blank=True, null=True)
+    compile_output = models.TextField(blank=True, null=True)
+
+    memory = models.CharField(max_length=50, blank=True, null=True)
+    time = models.CharField(max_length=50, blank=True, null=True)
+    stdout = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"TestCase {self.id} of Submission {self.submission.id}"
