@@ -1,3 +1,6 @@
+from django.db.models import Q
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import make_aware
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -32,28 +35,95 @@ class GetAllProblemView(APIView):
     permission_classes = [IsAuthenticated]
    
     def get(self, request):
-        
-        # Define the subquery
-        subquery = Submission.objects.filter(
-            problem=OuterRef('pk'),   # links Problem to Submission
-            user=request.user,        # filters submissions by logged-in user
-            status="Passed"           # filters submissions where status is "passed"
-        )
-        
-        problems = Problem.objects.annotate(
-            user_submission_passed = Exists(subquery)
-        ).order_by('-created_at')
+        try:
+            limit = int(request.GET.get('limit', 10))  # how many items per batch 
+            cursor_date = request.GET.get('cursor_date')  # cursor for pagination
+            cursor_id = request.GET.get('cursor_id')  # cursor for pagination
+            
+            
+            # Convert cursor_date from string to datetime
+            if cursor_date:
+                # Replace spaces with + to handle unencoded URLs
+                cursor_date = cursor_date.replace(' ', '+')
+                dt = parse_datetime(cursor_date)
+                if dt is None:
+                    return Response({"error": "Invalid cursor_date"}, status=400)
+                cursor_date = dt
+            
+            
+            if cursor_id:
+                try:
+                    cursor_id = int(cursor_id)
+                except ValueError:
+                    return Response({"error": "Invalid cursor_id"}, status=400)
 
-        serializer = GetAllProblemSerializer(problems, many=True)
+
+            # Define the subquery
+            subquery = Submission.objects.filter(
+                problem=OuterRef('pk'),   # links Problem to Submission
+                user=request.user,        # filters submissions by logged-in user
+                status="Passed"           # filters submissions where status is "passed"
+            )
+            
+
+            problems = Problem.objects.annotate(
+                user_submission_passed = Exists(subquery)
+            ).order_by('-created_at', '-id')
+
+
+            # Apply cursor (fetch only items after given cursor)
+            if cursor_date and cursor_id:
+                problems = problems.filter(
+                    Q(created_at__lt=cursor_date) |
+                    Q(created_at=cursor_date, id__lt=cursor_id)
+                )
+
+            
+            # Fetch one extra to check if more items exist
+            problems = list(problems[:limit])
+            has_more = len(problems) == limit
+
+
+            if not problems:
+                return Response({
+                    "message": "No more problems",
+                    "success": True,
+                    "data": [],
+                    "next_cursor_date": None,
+                    "next_cursor_id": None,
+                    "has_more": False
+                }, status=status.HTTP_200_OK)
+
+
+            serializer = GetAllProblemSerializer(problems, many=True)
+
+
+            # Set next cursor
+            last_problem = problems[-1]
+            next_cursor_date = last_problem.created_at.isoformat()
+            next_cursor_id = last_problem.id
+            
+            return Response(
+                {
+                    "message": "Problems fetched successfully",
+                    "success": True,
+                    "data": serializer.data,
+                    "next_cursor_date": next_cursor_date,
+                    "next_cursor_id": next_cursor_id,
+                    "has_more": has_more
+                },
+                status=status.HTTP_200_OK
+            )
         
-        return Response(
-            {
-                "message" : "all problem fetched successfully",
-                "data" : serializer.data,
-                "success" : True
-            },
-            status=status.HTTP_200_OK
-        )
+        except Exception as e:
+            return Response(
+                {
+                    "message" : "Error occured",
+                    "success" : False,
+                    "error" : str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
 
 

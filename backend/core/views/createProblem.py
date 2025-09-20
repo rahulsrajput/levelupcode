@@ -44,10 +44,12 @@ class CreateProblemView(APIView):
     permission_classes = [IsAuthenticated, RoleRequired(['admin'])]
    
     def post(self, request):
-        
-        data = request.data
-        
-        serializer = CreateProblemSerializer(data=data)
+        # Ensure request.data is always a list
+        data_list = request.data
+        if isinstance(data_list, dict):
+            data_list = [data_list]
+
+        serializer = CreateProblemSerializer(data=data_list, many=True)
 
         if not serializer.is_valid():
             return Response(
@@ -55,98 +57,115 @@ class CreateProblemView(APIView):
                     "message": "Invalid data",
                     "success": False,
                     "errors": serializer.errors
-                }, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-
-        # Check if title already exists
-        if Problem.objects.filter(title=data.get('title')).exists():
-            return Response(
-                {
-                    "message": "Problem with this title already exists",
-                    "success": False
-                }, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-
-        # Proceed to Judge0 checks
-        testcases = data.get('testcases')
-        reference_solutions = data.get('reference_solutions')
-        # print(data)
-
-
-        try:
-            for language, solution_code in reference_solutions.items():
-                # print(language.lower().capitalize(), solution_code)
-                
-                try:
-                    languageId = Language.objects.get(
-                        name = language.capitalize(),
-                        isActive = True
-                    ).langId
-                    # print(languageId)
-                except Language.DoesNotExist:
-                    return Response(
-                        {
-                            "message" : f"Language {language} is not supported",
-                            "success" : False
-                        },
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-
-                
-                submission = [
-                    {
-                        'language_id': languageId,
-                        'source_code': solution_code,
-                        'stdin': tc['input'],
-                        'expected_output': tc['expected'],
-                    }
-                    for tc in testcases
-                ]
-                # print("SUBMISSION: ",submission)
-
-                tokens = submit_batch(submission)
-                # print(tokens)
-
-                results = poll_batch_results(tokens)
-                # print("RESULT: ",results)
-                
-                
-                for index, res in enumerate(results):
-                    if res['status']['id'] != 3:
-                        return Response(
-                            {
-                                "message": f"Reference solution for language {language} failed for testcase #{index + 1}",
-                                "success": False,
-                                "error": res
-                            }, 
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-                    
-            # All checks passed, save the problem
-            problem = serializer.save(user=request.user)
-
-            return Response(
-                {
-                    "message": "Problem created successfully",
-                    "success": True,
-                    "problem": CreateProblemSerializer(problem).data
-                }, status=status.HTTP_201_CREATED
-            )
-
-
-        except Exception as e:
-            return Response(
-                {
-                    "message" : "An error occurred",
-                    "success" : False,
-                    "error" : str(e)
                 },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_400_BAD_REQUEST
             )
-        
 
-        
+        valid_data = []
+        failed_problems = []
+
+        for data in data_list:
+            title = data.get('title')
+
+            # Check title uniqueness
+            if Problem.objects.filter(title=title).exists():
+                failed_problems.append({
+                    "title": title,
+                    "status": "failed",
+                    "error": "Problem with this title already exists"
+                })
+                continue
+
+            testcases = data.get('testcases', [])
+            reference_solutions = data.get('reference_solutions', {})
+
+            problem_failed = False
+            error_detail = None
+
+            try:
+                for language, solution_code in reference_solutions.items():
+                    try:
+                        languageId = Language.objects.get(
+                            name=language.capitalize(),
+                            isActive=True
+                        ).langId
+                    except Language.DoesNotExist:
+                        problem_failed = True
+                        error_detail = f"Language {language} is not supported"
+                        break
+
+                    submission = [
+                        {
+                            'language_id': languageId,
+                            'source_code': solution_code,
+                            'stdin': tc['input'],
+                            'expected_output': tc['expected'],
+                        }
+                        for tc in testcases
+                    ]
+
+                    tokens = submit_batch(submission)
+                    results = poll_batch_results(tokens)
+
+                    for index, res in enumerate(results):
+                        if res['status']['id'] != 3:
+                            problem_failed = True
+                            error_detail = f"Reference solution for language {language} failed for testcase #{index + 1}"
+                            break
+
+                    if problem_failed:
+                        break
+
+            except Exception as e:
+                problem_failed = True
+                error_detail = str(e)
+
+            if problem_failed:
+                failed_problems.append({
+                    "title": title,
+                    "status": "failed",
+                    "success": False,
+                    "error": error_detail
+                })
+            else:
+                valid_data.append(data)
+
+        # Save all valid problems in bulk
+        saved_problems = []
+        if valid_data:
+            valid_serializer = CreateProblemSerializer(data=valid_data, many=True)
+            valid_serializer.is_valid(raise_exception=True)
+            saved_problems = valid_serializer.save(user=request.user)
+
+        if len(saved_problems) + len(failed_problems) > 1:
+            # Bulk upload response
+            return Response(
+                {
+                    "message": "Bulk upload completed",
+                    "success_count": len(saved_problems),
+                    "failed_count": len(failed_problems),
+                    "saved_problems": CreateProblemSerializer(saved_problems, many=True).data,
+                    "failed_problems": failed_problems
+                },
+                status=status.HTTP_207_MULTI_STATUS
+            )
+        else:
+            # Single problem response
+            if saved_problems:
+                return Response(
+                    {
+                        "message": "Problem created successfully",
+                        "success": True,
+                        "problem": CreateProblemSerializer(saved_problems[0]).data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {
+                        "message": "Problem creation failed",
+                        "success": False,
+                        "error": failed_problems[0]["error"] if failed_problems else "Unknown error"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
