@@ -5,6 +5,7 @@ MAILTRAP_API_URL = "https://sandbox.api.mailtrap.io/api/send/4011941"
 
 
 def send_mailtrap_mail(to_email, user_name, link, template_id):
+    print(link)
     headers = {
         'Authorization' : f"Bearer {config('MAILTRAP_API_KEY')}",
         'Content-Type' : 'application/json'
