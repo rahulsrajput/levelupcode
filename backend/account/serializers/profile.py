@@ -6,21 +6,15 @@ class ProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = [
-            'email',
-            'username',
-            'first_name',
-            'last_name',
-            'bio',
-            'created_at',
-            'role',
-            'profile_url'
-        ]
         read_only_fields = [
-            'created_at',
-            'role',
-            'username',
+            "password", 
+            "role", "created_at", 
+            "updated_at", 
+            "last_login", 
+            "is_active", "is_staff", 
+            "is_superuser", "is_verified", "groups", "user_permissions", "id"
         ]
+        exclude = ["password"]
 
         def update(self, instance, validated_data):
 

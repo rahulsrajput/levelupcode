@@ -8,9 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 
 
 class logoutView(APIView):
-    
-    permission_classes = [IsAuthenticated]
-    
+       
     def post(self, request):
         
         refresh_token = request.COOKIES.get('refresh') # got token in string format

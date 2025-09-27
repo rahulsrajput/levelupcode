@@ -51,7 +51,7 @@ class ProfileView(APIView):
 
             return Response(
                 {
-                    "message":"Profile data",
+                    "message":"Profile data, User is authenticated",
                     'success': True,
                     'data': serializer.data
                 }, 
