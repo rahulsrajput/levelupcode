@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from account.utils.logUserSession import log_user_session
 from account.utils.jwt_helper import generate_access_token, generate_refresh_token
+from account.serializers.profile import ProfileSerializer
 
 class LoginUserSerialier(serializers.Serializer):
     
@@ -37,5 +38,5 @@ class LoginUserSerialier(serializers.Serializer):
         
         attrs['refresh'] = str(refresh)
         attrs['access'] = str(access)
-        attrs['user'] = user
+        attrs['user'] = ProfileSerializer(user).data
         return attrs

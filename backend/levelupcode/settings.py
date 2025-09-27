@@ -32,12 +32,11 @@ ALLOWED_HOSTS = ["*"]
 
 CORS_ALLOW_ALL_ORIGINS = False
 
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    "http://localhost:5173",  # React dev server
 ]
 
-# Allow cookies/credentials
-CORS_ALLOW_CREDENTIALS = True
 
 
 AUTH_USER_MODEL = 'account.CustomUser'
@@ -56,7 +55,7 @@ INSTALLED_APPS = [
     'account',
     'anymail',
     'core',
-    "corsheaders"
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
