@@ -24,6 +24,7 @@ class loginView(APIView):
                     "email": serializer.validated_data.get("email"),
                     "refresh": serializer.validated_data.get("refresh"),
                     "access": serializer.validated_data.get("access"),
+                    "user": serializer.validated_data.get("user"),
                 }, 
                 status=status.HTTP_200_OK
             )
