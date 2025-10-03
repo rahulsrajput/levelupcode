@@ -1,5 +1,8 @@
 from django.db.models import Q
+from django.forms import FloatField
 from django.utils.dateparse import parse_datetime
+from django.db.models import Max, FloatField
+from django.db.models.functions import Cast
 from django.utils.timezone import make_aware
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,8 +16,11 @@ from core.serializers.getAllProblem import (
     GetAllProblemSerializer, 
     GetProblemSubmissionsForUserSerailizer, 
     GetUserProblemSubmissionDetailSerializer, 
-    GetAllTagsSerializer
+    GetAllTagsSerializer,
+    GetAllLanguagesSerializer,
+    GetUserProblemSubmissionTestCasesSerializer
 )
+from core.models import Language
 
 
 
@@ -134,6 +140,25 @@ class GetAllProblemView(APIView):
         - The submissions related to a problem can be accessed using the related manager submissions.
         - This is done through the foreign key relationship defined in the Submission model.
         - it is checking problem pk present in Submission model's problem field.
+    
+        
+    Annotate each Submission with runtime and memory values.
+
+    - `testcases__time` / `testcases__memory`:
+        Follows the reverse FK (Submission → SubmissionTestCase)
+        and gathers all `time` / `memory` values for that submission.
+
+    - `Cast(..., FloatField())`:
+        Converts CharField values (stored as strings in DB) into floats
+        so numeric aggregation can be applied.
+
+    - `Max(...)`:
+        Picks the **largest value** among all testcases for each submission.
+        (runtime = slowest testcase, memory = highest usage testcase)
+
+    - `.annotate(runtime=..., memory=...)`:
+        Adds two new fields to each Submission row in the queryset:
+        `.runtime` and `.memory`.
 """
 
 class GetUserProblemSubmissionsView(APIView):
@@ -144,7 +169,10 @@ class GetUserProblemSubmissionsView(APIView):
         problem = get_object_or_404(Problem, slug=slug)
 
         try:
-            submissions = problem.submissions.filter(user=request.user).order_by('created_at')
+            submissions = problem.submissions.filter(user=request.user).order_by('-created_at').annotate(
+                runtime = Max(Cast("testcases__time", FloatField())),
+                memory = Max(Cast("testcases__memory", FloatField()))
+            )
             
             serializer = GetProblemSubmissionsForUserSerailizer(submissions, many=True)
 
@@ -183,11 +211,29 @@ class GetUserProblemSubmissionDetailView(APIView):
 
         serializer = GetUserProblemSubmissionDetailSerializer(submission)
 
+        submissionTestcases = submission.testcases.all()
+        
+        totalTestCases = submissionTestcases.count()
+        # print(totalTestCases)
+
+        totalPassedTestCases = submissionTestcases.filter(status="Accepted").count()
+        # print(totalPassedTestCases)
+
+        failedTestCases = submissionTestcases.filter(
+            Q(status="Wrong Answer") | Q(status="Runtime Error") | Q(status="Time Limit Exceeded") | Q(status="Compilation Error")
+        )
+    
         return Response(
             {
                 "message" : "submission fetched successfully",
                 "success" : True,
-                "data" : serializer.data
+                "data" : serializer.data,
+                "totalTestCases" : totalTestCases,
+                "totalPassedTestCases" : totalPassedTestCases,
+                "failedTestCases" : GetUserProblemSubmissionTestCasesSerializer(
+                    failedTestCases,
+                    many=True
+                ).data
             },
             status=status.HTTP_200_OK
         )
@@ -238,3 +284,60 @@ class GetTagProblemsView(APIView):
                 },
                 status=status.HTTP_200_OK
             )
+        
+
+
+class GetSearchResultView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        query = request.GET.get('query')
+        try:
+
+            # Define the subquery
+            subquery = Submission.objects.filter(
+                problem=OuterRef('pk'),   # links Problem to Submission
+                user=request.user,        # filters submissions by logged-in user
+                status="Passed"           # filters submissions where status is "passed"
+            )
+        
+            problems = Problem.objects.annotate(
+                user_submission_passed = Exists(subquery)
+            ).order_by('-created_at').filter(
+                Q(title__icontains=query)
+            )
+
+            serializer = GetAllProblemSerializer(problems, many=True)
+
+            return Response(
+                {
+                    "message" : "Search result fetched successfully",
+                    "success" : True,
+                    "data" : serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "message" : "Error occured while fetching search result",
+                    "success" : False,
+                    "error" : str(e)
+                }
+            )
+
+
+class GetAllLanguages(APIView):
+    def get(self, request):
+        languages = Language.objects.all()
+
+        serializer = GetAllLanguagesSerializer(languages, many=True)
+
+        return Response(
+            {
+                "message" : "Languages fetched successfully",
+                "success" : True,
+                "data" : serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
