@@ -1,4 +1,3 @@
-from tkinter import N
 from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
 from django.contrib.auth import get_user_model
