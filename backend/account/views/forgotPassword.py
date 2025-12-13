@@ -17,7 +17,7 @@ class ForgotPassword(APIView):
         try:
             user = User.objects.get(email=request.data.get("email"))
             resetToken = PasswordResetToken.objects.create(user=user)
-            verification_link = f"{config('FRONTEND_URL')}/verify-email/{resetToken.token}"
+            verification_link = f"{config('FRONTEND_URL')}/reset-password/{resetToken.token}"
             # print(resetToken)
     
             try:
