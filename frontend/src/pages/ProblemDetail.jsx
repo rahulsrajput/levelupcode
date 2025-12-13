@@ -1,12 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { getProblemBySlug, getProblemSubmissionsByUser, getAllLanguages } from "../api/problemApi"; // implement this
+import { getProblemBySlug, getProblemSubmissionsByUser, getAllLanguages } from "../api/problemApi";
 import toast from "react-hot-toast";
 import CodeEditor from "../components/editor";
 import useProblemStore from "../store/useProblemStore";
 import LoaderComponent from "../components/Loader";
-
 
 function ProblemDetail() {
     const { slug } = useParams();
@@ -17,14 +15,12 @@ function ProblemDetail() {
     const [submissions, setSubmissions] = useState([]);
     const { setLanguageList } = useProblemStore();
 
-    
     // Fetch available languages
     useEffect(() => {
         async function fetchLanguages() {
             try {
                 const res = await getAllLanguages();
                 setLanguageList(res.data.data);
-                toast.success("Languages fetched successfully");
             } catch (error) {
                 toast.error(error.response?.message || "Something went wrong");
             }
@@ -32,14 +28,13 @@ function ProblemDetail() {
         fetchLanguages();
     }, []);
 
-
+    // Fetch problem and user submissions
     useEffect(() => {
         async function fetchProblem() {
             try {
                 const res = await getProblemBySlug(slug);
                 setProblem(res.data.data);
             } catch (err) {
-                console.error("Error fetching problem:", err);
                 toast.error("Failed to load problem");
             }
         }
@@ -49,53 +44,46 @@ function ProblemDetail() {
                 const res = await getProblemSubmissionsByUser(slug);
                 setSubmissions(res.data.data || []);
             } catch (err) {
-                console.error("Error fetching submissions:", err);
                 toast.error("Failed to load submissions");
             }
         }
 
-        fetchSubmissions();
         fetchProblem();
+        fetchSubmissions();
     }, [slug]);
 
-
-    // Update tab based on URL
+    // Set active tab from URL
     useEffect(() => {
         if (location.pathname.includes("submissions")) setActiveTab("submissions");
         else if (location.pathname.includes("editorial")) setActiveTab("editorial");
         else setActiveTab("description");
     }, [location.pathname]);
 
-
     const handleTabClick = (tab) => {
         setActiveTab(tab);
         if (tab === "submissions") navigate(`submissions`);
-        else if (tab === "editorial") navigate(`editorial`); // optional
-        else navigate(""); // back to description
+        else if (tab === "editorial") navigate(`editorial`);
+        else navigate("");
     };
 
-
-    if (!problem) {
-        return (
-            <LoaderComponent />
-        );
-    }
+    if (!problem) return <div className="flex justify-center items-center min-h-screen"><LoaderComponent /></div>;
 
     return (
-        <div className="container mx-auto px-4 mt-6">
-            <div className="card bg-black/40 backdrop-blur-lg shadow-xl p-6 max-w-5xl mx-auto rounded-lg text-gray-200">
+        <div className="flex justify-center px-4 pt-6 font-sans text-gray-800">
+            <div className="w-full max-w-5xl bg-gray-250/30 border border-gray-400/25 rounded-xl p-6 mx-auto font-sans text-gray-800 space-y-6">
+
                 {/* Title */}
-                <h1 className="text-2xl font-bold mb-4">{problem.title}</h1>
+                <h1 className="text-2xl font-bold text-gray-900 text-center">{problem.title}</h1>
 
                 {/* Tabs */}
-                <div className="flex gap-4 mb-4 border-b border-gray-700">
-                    {["description", "submissions", "editorial"].map((tab) => (
+                <div className="flex justify-center gap-1 border-b-1 border-gray-300">
+                    {["description", "submissions", "editorial"].map(tab => (
                         <button
                             key={tab}
                             onClick={() => handleTabClick(tab)}
-                            className={`pb-2 px-1 font-mono text-sm capitalize cursor-pointer ${activeTab === tab
-                                ? "border-b-2 border-indigo-400 text-white"
-                                : "text-gray-400 hover:text-white"
+                            className={`pb-2 px-3 text-sm font-mono capitalize transition ${activeTab === tab
+                                    ? "border-b-2 border-indigo-500 text-gray-900 font-semibold"
+                                    : "text-gray-500 hover:text-gray-700"
                                 }`}
                         >
                             {tab}
@@ -103,117 +91,80 @@ function ProblemDetail() {
                     ))}
                 </div>
 
-
-
                 {/* Content */}
                 {activeTab === "description" && (
-                    <div>
+                    <div className="space-y-6">
+
                         {/* Difficulty */}
-                        <div className="mb-4">
-                            <span
-                                className={`font-semibold ${problem.difficulty === "Easy"
-                                    ? "text-green-400"
+                        <div>
+                            <span className={`font-semibold ${problem.difficulty === "Easy"
+                                    ? "text-emerald-600"
                                     : problem.difficulty === "Medium"
-                                        ? "text-yellow-400"
-                                        : "text-red-400"
-                                    }`}
-                            >
+                                        ? "text-amber-600"
+                                        : "text-rose-600"
+                                }`}>
                                 {problem.difficulty}
                             </span>
                         </div>
 
                         {/* Description */}
-                        <div className="mb-6 whitespace-pre-line text-gray-300 leading-relaxed">
+                        <div className="text-gray-700 whitespace-pre-line leading-relaxed">
                             {problem.description}
                         </div>
 
                         {/* Examples */}
                         {problem.examples && (
-                            <div className="mb-6">
-                                <h3 className="text-lg font-semibold mb-2">Examples :</h3>
-                                <div className="space-y-4">
-                                    {Object.entries(problem.examples).map(([lang, ex], idx) => (
-                                        <div
-                                            key={idx}
-                                            className="bg-black/30 p-3 rounded-lg"
-                                        >
-                                            <p className="text-sm">
-                                                <span className="font-mono text-indigo-400">Example:</span>{" "}
-                                                {idx + 1}
-                                            </p>
-                                            <p className="text-sm">
-                                                <span className="font-mono text-indigo-400">Language:</span>{" "}
-                                                {lang}
-                                            </p>
-                                            <p className="text-sm">
-                                                <span className="font-mono text-indigo-400">Input:</span>{" "}
-                                                {ex.input}
-                                            </p>
-                                            <p className="text-sm">
-                                                <span className="font-mono text-indigo-400">Output:</span>{" "}
-                                                {ex.output}
-                                            </p>
-                                            {ex.explanation && (
-                                                <p className="text-sm text-gray-400 mt-1">
-                                                    <span className="font-mono">Explanation:</span>{" "}
-                                                    {ex.explanation}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-900">Examples:</h3>
+                                {Object.entries(problem.examples).map(([lang, ex], idx) => (
+                                    <div key={idx} className="bg-white/20 p-3 rounded-md">
+                                        <p className="text-sm font-mono text-indigo-500">Example {idx + 1} ({lang})</p>
+                                        <p className="text-sm"><span className="font-mono">Input:</span> {ex.input}</p>
+                                        <p className="text-sm"><span className="font-mono">Output:</span> {ex.output}</p>
+                                        {ex.explanation && <p className="text-sm text-gray-600"><span className="font-mono">Explanation:</span> {ex.explanation}</p>}
+                                    </div>
+                                ))}
                             </div>
                         )}
 
                         {/* Constraints */}
                         {problem.constraints && (
                             <div>
-                                <h3 className="text-lg font-semibold mb-2">Constraints</h3>
-                                <p className="text-gray-300 whitespace-pre-line">
-                                    {problem.constraints}
-                                </p>
+                                <h3 className="text-lg font-semibold text-gray-900">Constraints</h3>
+                                <p className="text-gray-700 whitespace-pre-line">{problem.constraints}</p>
                             </div>
                         )}
 
                         {/* Tags */}
                         {problem.tags && (
-                            <div className="mt-6 flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2">
                                 {problem.tags.map((tag, idx) => (
-                                    <span
-                                        key={idx}
-                                        className="text-xs px-3 py-1 bg-gray-700 rounded-full font-mono"
-                                    >
+                                    <span key={idx} className="px-3 py-1 bg-gray-200/50 text-gray-800 text-xs rounded-full font-mono">
                                         {tag}
                                     </span>
                                 ))}
                             </div>
                         )}
 
-
+                        {/* Code Editor */}
                         <CodeEditor problem={problem} />
+
                     </div>
                 )}
 
-                {activeTab === "submissions" && (
-                    // Outlet will switch between SubmissionList and SubmissionDetail
-                    <Outlet context={{ submissions }} />
-                )}
+                {activeTab === "submissions" && <Outlet context={{ submissions }} />}
 
                 {activeTab === "editorial" && (
                     problem.editorial ? (
-                        <div className="whitespace-pre-line text-gray-300 leading-relaxed">
-                            {problem.editorial}
-                        </div>
+                        <div className="text-gray-700 whitespace-pre-line leading-relaxed">{problem.editorial}</div>
                     ) : (
-                        <p className="text-gray-400 italic">
-                            No editorial available for this problem.
-                        </p>
+                        <p className="text-gray-500 italic">No editorial available for this problem.</p>
                     )
                 )}
+
             </div>
         </div>
     );
 }
 
-
-export default ProblemDetail
+export default ProblemDetail;

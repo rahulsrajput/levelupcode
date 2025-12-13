@@ -6,76 +6,67 @@ import { Mail, Code } from "lucide-react";
 import toast from "react-hot-toast";
 import { forgotPassword } from "../api/authApi";
 
-
-// Zod schema for reset password (only email)
+// Zod schema
 const updatePasswordSchema = z.object({
   email: z.string().email("Enter a valid email"),
 });
 
-
 function UpdatePassword() {
-
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
     resolver: zodResolver(updatePasswordSchema),
   });
 
-
   async function onSubmit(data) {
     try {
-      const res = await forgotPassword(data);
-      console.log("forgotPassword response:", res);
-      toast.success("Password reset link sent to your email", {duration:8000});
+      await forgotPassword(data);
+      toast.success("Password reset link sent to your email", { duration: 8000 });
     } catch (error) {
-      toast.error(error.response?.data?.message);
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   }
 
-
-
-
   return (
-    <div className="flex items-center justify-center min-h-screen px-4">
-      <div className="w-full max-w-md text-white rounded-lg shadow-xl overflow-hidden">
-        <div className="p-6 sm:p-8 flex flex-col justify-center max-h-screen">
-          {/* Title */}
-          <div className="flex items-center justify-center gap-2">
-            <h2 className="text-2xl font-bold">Reset Password</h2>
-            <Code className="h-6 w-6 text-base-content/40 translate-y-0.5 animate-pulse" />
+    <div className="flex items-center justify-center min-h-screen px-4 font-sans text-gray-800">
+      <div className="w-full max-w-md flex flex-col gap-6">
+
+        {/* Title */}
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <h2 className="text-2xl font-bold">Forgot Password</h2>
+            <Code className="h-6 w-6 text-gray-500 animate-pulse" />
           </div>
-
-          {/* Subtitle */}
-          <div className="text-center mb-6">
-            <p className="text-base-content/60 mt-1">Enter your email to receive reset link</p>
-          </div>
-
-          {/* Form */}
-          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            {/* Email */}
-            <div className="form-control relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                <Mail className="h-5 w-5 text-base-content/40" />
-              </div>
-              <input
-                type="email"
-                {...register("email")}
-                placeholder="you@example.com"
-                className="input input-bordered pl-10 w-full text-white relative z-0 border-0"
-              />
-            </div>
-            {errors.email && (
-              <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn btn-black rounded w-full mt-2 hover:scale-105 transition-transform"
-            >
-              {isSubmitting ? <span className="loading loading-spinner"></span> : "Send Reset Link"}
-            </button>
-          </form>
+          <p className="text-gray-600 text-sm">Enter your email to receive a reset link</p>
         </div>
+
+        {/* Form */}
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+          {/* Email */}
+          <div className="relative flex items-center">
+            <Mail className="h-5 w-5 text-gray-400 absolute left-2" />
+            <input
+              type="email"
+              {...register("email")}
+              placeholder="you@example.com"
+              className="pl-10 w-full h-10 bg-transparent text-gray-800 placeholder-gray-400 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
+            />
+          </div>
+          <p className="text-red-500 text-sm min-h-[1.25rem]">
+            {errors.email ? errors.email.message : "\u00A0"}
+          </p>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-2 text-gray-800 font-medium bg-gray-100 hover:bg-gray-200 rounded transition"
+          >
+            {isSubmitting ? "Sending..." : "Send Reset Link"}
+          </button>
+        </form>
       </div>
     </div>
   );

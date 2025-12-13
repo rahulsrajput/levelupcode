@@ -6,26 +6,23 @@ import Routes from './routes'
 import useAuthStore from './store/useAuthStore'
 import { getCurrentUser } from './api/authApi'
 import LoaderComponent from './components/Loader'
-
+import Footer from './pages/Footer.jsx'
 
 function App() {
 
   const { setUser, setLoading, loading, logout } = useAuthStore()
 
-  useEffect ( function () {
-    const fetchUser = async function () {
+  useEffect(() => {
+    const fetchUser = async () => {
       try {
         const res = await getCurrentUser();
-        console.log("Me response:", res.data);
         setUser(res.data.data)
       } catch (error) {
         logout();
-        console.log("No user logged in yet", error);
         toast.error(error.response?.data?.message || error.message);
         toast.error("User is not logged in");
-        setLoading(false); // Ensure loading state is updated on error
-      }
-      finally {
+        setLoading(false);
+      } finally {
         setLoading(false)
       }
     }
@@ -33,19 +30,43 @@ function App() {
     fetchUser();
   }, [])
 
-
-  if (loading) return < LoaderComponent /> // Show loader while checking auth
+  if (loading) return <LoaderComponent />
 
   return (
-    <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
-      {/* Navbar */}
-      <Navbar />
+    <div
+      className="
+        min-h-screen w-full overflow-x-hidden
+        text-gray-800
+        relative
+      "
+    >
 
-      {/* Main content */}
-      <div className="flex-1">
-        <Toaster />
-        <Routes />
+      {/* Global Dotted Background */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(rgba(0,0,0,0.10) 1px, transparent 1px)",
+          backgroundSize: "18px 18px",
+        }}
+      />
+
+      {/* Main App Content */}
+      <div className="relative z-10 flex flex-col min-h-screen">
+
+        <Navbar />
+
+        <div className="flex-1">
+          <Toaster />
+          <Routes />
+        </div>
+
+        {/* Footer - Stays at bottom */}
+        <div className="relative z-10 mt-auto">
+          <Footer />
+        </div>
       </div>
+
     </div>
   )
 }
