@@ -4,6 +4,7 @@ from account.serializers.register import RegisterSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from account.utils.email import send_mailtrap_mail
+from account.utils.gmailEmail import send_real_email
 from account.constants import VERIFY_EMAIL_TEMPLATE_ID
 import jwt
 import datetime
