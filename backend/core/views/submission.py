@@ -90,10 +90,14 @@ class SubmitProblemView(APIView):
                 )
             SubmissionTestCase.objects.bulk_create(testcases)
 
+            print(testcases)
+            # print(batch)
+
             # 4. Send batch to Judge0
             try : 
                 tokens = submit_batch(batch) # returns ["tok1", "tok2", ...]
-                
+                print(tokens)
+
                 """
                     can use zip() to map tokens to testcases and update them
                     The zip() function takes multiple iterables (like lists, tuples, etc.) and pairs up the elements from each iterable based on their position (index).
