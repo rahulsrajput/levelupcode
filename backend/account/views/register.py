@@ -48,11 +48,17 @@ class registerView(APIView):
             
             try:
                 
-                response = send_mailtrap_mail(
+                # response = send_mailtrap_mail(
+                #     to_email = user.email,
+                #     user_name = user.email,
+                #     link = f'{config("FRONTEND_URL")}/verify-email/{email_verification_token}',
+                #     template_id = VERIFY_EMAIL_TEMPLATE_ID,
+                # )
+
+                response = send_real_email(
                     to_email = user.email,
                     user_name = user.email,
                     link = f'{config("FRONTEND_URL")}/verify-email/{email_verification_token}',
-                    template_id = VERIFY_EMAIL_TEMPLATE_ID,
                 )
 
                 if response.status_code != 200:

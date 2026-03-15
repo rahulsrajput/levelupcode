@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from account.models import PasswordResetToken
 from account.utils.email import send_mailtrap_mail
+from account.utils.gmailEmail import send_real_email
 from account.constants import RESET_PASSWORD_TEMPLATE_ID
 from django.contrib.auth import get_user_model
 from decouple import config
@@ -21,13 +22,20 @@ class ForgotPassword(APIView):
             # print(resetToken)
     
             try:
-                response = send_mailtrap_mail(
+                # response = send_mailtrap_mail(
+                #     to_email = user.email,
+                #     user_name = user.email,
+                #     link = verification_link,
+                #     template_id = RESET_PASSWORD_TEMPLATE_ID,
+                # )
+                
+                response = send_real_email(
                     to_email = user.email,
                     user_name = user.email,
                     link = verification_link,
-                    template_id = RESET_PASSWORD_TEMPLATE_ID,
                 )
-                
+
+
                 if response.status_code == 200:
                     return Response({
                         'message': "Reset password link sent via email",
