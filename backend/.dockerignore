@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django database files
+*.sqlite3
+
+# Environment files
+.env
+
+# Virtual environments
+venv/
+.venv/
+
+# Node modules if any (frontend inside backend)
+node_modules/
+
+# Git
+.git
+.gitignore
