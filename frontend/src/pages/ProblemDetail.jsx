@@ -28,6 +28,16 @@ function ProblemDetail() {
         fetchLanguages();
     }, []);
 
+    // Extracted so it can be reused
+    const fetchSubmissions = async () => {
+        try {
+            const res = await getProblemSubmissionsByUser(slug);
+            setSubmissions(res.data.data || []);
+        } catch (err) {
+            toast.error("Failed to load submissions");
+        }
+    };
+
     // Fetch problem and user submissions
     useEffect(() => {
         async function fetchProblem() {
@@ -39,18 +49,14 @@ function ProblemDetail() {
             }
         }
 
-        async function fetchSubmissions() {
-            try {
-                const res = await getProblemSubmissionsByUser(slug);
-                setSubmissions(res.data.data || []);
-            } catch (err) {
-                toast.error("Failed to load submissions");
-            }
-        }
-
         fetchProblem();
         fetchSubmissions();
     }, [slug]);
+
+    // Refetch submissions whenever submissions tab becomes active
+    useEffect(() => {
+        if (activeTab === "submissions") fetchSubmissions();
+    }, [activeTab]);
 
     // Set active tab from URL
     useEffect(() => {
@@ -152,7 +158,7 @@ function ProblemDetail() {
                     </div>
                 )}
 
-                {activeTab === "submissions" && <Outlet context={{ submissions }} />}
+                {activeTab === "submissions" && <Outlet context={{ submissions, refetch: fetchSubmissions }} />}
 
                 {activeTab === "editorial" && (
                     problem.editorial ? (
